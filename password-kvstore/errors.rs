@@ -5,7 +5,7 @@ use std::string::FromUtf8Error;
 use serde::ser::SerializeStruct;
 use serde::{Serialize, Serializer};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Error {
     AlreadyExists(String),
     NotFound(String),
@@ -24,6 +24,7 @@ pub enum Error {
     RSAError(String),
     StorageError(String),
     PasswordHashingError(String),
+    ChaCha20Poly1305Error(String),
 }
 
 impl Serialize for Error {
@@ -61,6 +62,7 @@ impl Display for Error {
                 Self::RSAError(e) => e.to_string(),
                 Self::StorageError(e) => e.to_string(),
                 Self::PasswordHashingError(e) => e.to_string(),
+                Self::ChaCha20Poly1305Error(e) => e.to_string(),
             }
         )
     }
@@ -85,6 +87,7 @@ impl Error {
             Error::RSAError(_) => "RSAError",
             Error::StorageError(_) => "StorageError",
             Error::PasswordHashingError(_) => "PasswordHashingError",
+            Error::ChaCha20Poly1305Error(_) => "ChaCha20Poly1305Error",
         }
         .to_string()
     }
@@ -141,5 +144,9 @@ impl From<argon2_kdf::Argon2Error> for Error {
         Error::PasswordHashingError(format!("{}", e))
     }
 }
-
+impl From<chacha20poly1305::Error> for Error {
+    fn from(e: chacha20poly1305::Error) -> Self {
+        Error::ChaCha20Poly1305Error(format!("{}", e))
+    }
+}
 pub type Result<T> = std::result::Result<T, Error>;
