@@ -9,7 +9,7 @@ use sha2::Sha256;
 use sha3::Digest;
 pub use sha3::Sha3_384;
 
-use crate::{Error, PlainBytes, Result, Secret};
+use crate::{Data, Error, PlainBytes, Result, Secret};
 
 pub fn hash_password(password: &str) -> Result<Hash> {
     Ok(Hasher::new()
@@ -23,19 +23,19 @@ pub fn hash_password(password: &str) -> Result<Hash> {
 }
 
 pub struct CipherText {
-    ciphertext: Vec<u8>,
-    nonce: [u8; 12],
+    pub ciphertext: Data,
+    pub nonce: [u8; 12],
 }
 
 pub struct Chacha20Tool {
-    password: Vec<u8>,
+    password: Data,
     iterations: u32,
 }
 
 impl Chacha20Tool {
     pub fn new(password: &str, iterations: u32) -> Chacha20Tool {
         Chacha20Tool {
-            password: password.as_bytes().to_vec(),
+            password: Data::new(password.as_bytes().to_vec()),
             iterations: iterations,
         }
     }
@@ -48,7 +48,7 @@ impl Chacha20Tool {
             .iterations(12)
             .memory_cost_kib(125000)
             .threads(2)
-            .hash(&self.password)?)
+            .hash(&self.password.bytes)?)
     }
 
     pub fn key(&self) -> Result<[u8; 32]> {
@@ -90,7 +90,10 @@ impl Chacha20Tool {
         let mut chacha20 = self.chacha20(&nonce)?;
         let mut ciphertext = data.to_vec();
         chacha20.apply_keystream(&mut ciphertext);
-        Ok(CipherText { ciphertext, nonce })
+        Ok(CipherText {
+            ciphertext: Data::new(ciphertext),
+            nonce,
+        })
     }
 
     pub fn decrypt(&self, data: &CipherText) -> Result<Vec<u8>> {
@@ -103,9 +106,13 @@ impl Chacha20Tool {
 }
 
 #[test]
-fn test() -> Result<()>{
+fn test() -> Result<()> {
     let mut tool = Chacha20Tool::new("password", 600);
-    let secret = (0..137).map(|h| format!("{}-secret-{}-", h, h)).collect::<String>().as_bytes().to_vec();
+    let secret = (0..137)
+        .map(|h| format!("{}-secret-{}-", h, h))
+        .collect::<String>()
+        .as_bytes()
+        .to_vec();
     let ciphertext = tool.encrypt(&secret)?;
     let plaintext = tool.decrypt(&ciphertext)?;
     assert_eq!(secret, plaintext);

@@ -9,17 +9,17 @@ use crate::Result;
 
 #[derive(Clone, PartialOrd, Eq, Ord, Hash, Deserialize, Serialize)]
 pub struct Data {
-    pub inner: Vec<u8>,
+    pub bytes: Vec<u8>,
 }
 impl PartialEq for Data {
     fn eq(&self, other: &Self) -> bool {
-        if self.inner.len() != other.inner.len() {
+        if self.bytes.len() != other.bytes.len() {
             return false
         }
         let mut pos = 0;
-        let len = self.inner.len();
+        let len = self.bytes.len();
         while pos < len {
-            if self.inner[pos] != other.inner[pos] {
+            if self.bytes[pos] != other.bytes[pos] {
                 return false
             }
             pos += 1;
@@ -30,24 +30,24 @@ impl PartialEq for Data {
 
 
 impl Data {
-    pub fn new(inner: Vec<u8>) -> Data {
-        Data { inner }
+    pub fn new(bytes: Vec<u8>) -> Data {
+        Data { bytes }
     }
 
     pub fn to_vec(&self) -> Vec<u8> {
-        self.inner.clone()
+        self.bytes.clone()
     }
 
     pub fn is_empty(&self) -> bool {
-        self.inner.is_empty()
+        self.bytes.is_empty()
     }
 
     pub fn to_bytes(&self) -> Vec<u8> {
-        self.inner.to_vec()
+        self.bytes.to_vec()
     }
 
     pub fn to_hex(&self, sep: &str, hint: bool) -> String {
-        self.inner
+        self.bytes
             .iter()
             .map(|o| format!("{}{:02x}", if hint { "0x" } else { "" }, o))
             .collect::<Vec<String>>()
@@ -88,23 +88,23 @@ impl Data {
     }
 
     pub fn contains(&mut self, byte: u8) -> bool {
-        !self.inner.iter().filter(|c| **c == byte).collect::<Vec<_>>().is_empty()
+        !self.bytes.iter().filter(|c| **c == byte).collect::<Vec<_>>().is_empty()
     }
 
     pub fn sort_by(&mut self, f: impl FnMut(&u8, &u8) -> Ordering) {
-        self.inner.sort_by(f)
+        self.bytes.sort_by(f)
     }
 
     pub fn get(&mut self, index: usize) -> Option<u8> {
-        self.inner.get(index).map(|byte| *byte)
+        self.bytes.get(index).map(|byte| *byte)
     }
 
     pub fn push(&mut self, byte: u8) {
-        self.inner.push(byte)
+        self.bytes.push(byte)
     }
 
     pub fn pop(&mut self) -> Option<u8> {
-        self.inner.pop()
+        self.bytes.pop()
     }
 
     pub fn set(&self) -> BTreeSet<u8> {
@@ -116,11 +116,11 @@ impl Data {
     }
 
     pub fn len(&self) -> usize {
-        self.inner.len()
+        self.bytes.len()
     }
 
     pub fn extend<T: Iterator<Item = u8>>(&mut self, iter: T) {
-        self.inner.extend(iter);
+        self.bytes.extend(iter);
     }
 
     pub fn extended<T: Iterator<Item = u8>>(&self, iter: T) -> Data {

@@ -7,7 +7,7 @@ use crate::utils::{drop, xor, xor_ip};
 
 impl Drop for Data {
     fn drop(&mut self) {
-        drop(&mut self.inner);
+        drop(&mut self.bytes);
     }
 }
 
@@ -21,7 +21,7 @@ impl BitXor for Data {
 
 impl BitXorAssign for Data {
     fn bitxor_assign(&mut self, rhs: Self) {
-        xor_ip(&mut self.inner, &rhs.to_vec())
+        xor_ip(&mut self.bytes, &rhs.to_vec())
     }
 }
 
@@ -120,13 +120,13 @@ impl Index<usize> for Data {
     type Output = u8;
 
     fn index(&self, index: usize) -> &Self::Output {
-        &self.inner[index]
+        &self.bytes[index]
     }
 }
 
 impl IndexMut<usize> for Data {
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
-        self.inner.index_mut(index)
+        self.bytes.index_mut(index)
     }
 }
 
